@@ -1,0 +1,17 @@
+type Action {
+  Id: String!
+  Title: String!
+}
+
+type ListActionsResponse {
+  items: [Action]
+  nextToken: String
+}
+
+type Query {
+    listCustomActions(nextToken: String): ListActionsResponse
+}
+
+# type Subscription { }
+
+# type Mutation { }

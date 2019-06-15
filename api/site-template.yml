@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: '2010-09-09'
+# aws --region us-east-2 create-stack --stack-name vpc-topographer-site --template-body file://site-template.yml
+# aws --region us-east-2 update-stack --stack-name vpc-topographer-site --template-body file://site-template.yml
+# aws s3 sync --delete build/ s3://vpc-topographer-site-topographerbucket-5xfufodd8hlz/
+Description: Vigor app
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+Conditions:
+  notDev: !Or
+  - !Equals [ !Ref Stage, "prod" ]
+  - !Equals [ !Ref Stage, "staging" ]
+Resources:
+  StaticSiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: "Private"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+  CloudFrontReadBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticSiteBucket
+      PolicyDocument:
+        Statement:
+          - Action: "s3:GetObject"
+            Effect: Allow
+            Resource: !Sub '${StaticSiteBucket.Arn}/*'
+            Principal:
+              AWS: !Sub
+                      - "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${cfoai}"
+                      - {cfoai: !Ref CloudFrontOriginAccessIdentity}
+  ServerlessWebsiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      Tags:
+        - Key: Name
+          Value: "Site for sls web site"
+      DistributionConfig:
+        Origins:
+        - DomainName: !GetAtt StaticSiteBucket.DomainName
+          Id: s3Origin
+          S3OriginConfig:
+            OriginAccessIdentity: !Sub
+              - origin-access-identity/cloudfront/${cfoai}
+              - {cfoai: !Ref CloudFrontOriginAccessIdentity}
+        Enabled: 'true'
+        Comment: Static Website for Vigor app
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - GET
+          - HEAD
+          Compress: true
+          DefaultTTL: 30
+          MaxTTL: 3600
+          MinTTL: 0
+          TargetOriginId: s3Origin
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        PriceClass: PriceClass_100
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Origin Access Identity for Vigor site
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt 'GraphQLAPI.ApiId'
+      DefinitionS3Location: schema.graphql
+  GraphQLAPI:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub vigor-backend-${Stage}
+      AuthenticationType: API_KEY
+  CustomActionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: Id
+        AttributeType: S
+      - AttributeName: Type
+        AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+      - AttributeName: Type
+        KeyType: HASH
+      - AttributeName: Id
+        KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: ExpiryEpoch
+        Enabled: true
+  CustomActionsDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLAPI.ApiId
+      Name: CustomActions
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncApiRole.Arn
+      DynamoDBConfig:
+        AwsRegion: !Ref 'AWS::Region'
+        TableName: !Ref CustomActionTable
+  ListCustomActionsResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLAPI.ApiId
+      DataSourceName: !GetAtt CustomActionsDataSource.Name
+      FieldName: listCustomActions
+      TypeName: Query
+      RequestMappingTemplateS3Location: mappings/customActions.list.request.vtl
+      ResponseMappingTemplateS3Location: mappings/passthrough.response.vtl
+  AppSyncApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /vigor/
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  #- dynamodb:BatchWriteItem
+                  #- dynamodb:PutItem
+                  #- dynamodb:UpdateItem
+                  #- dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                Resource:
+                  - !GetAtt CustomActionTable.Arn
+                  - !Sub '${CustomActionTable.Arn}/*'
+#        - PolicyName: LambdaAccess
+#          PolicyDocument:
+#            Version: '2012-10-17'
+#            Statement:
+#              - Effect: Allow
+#                Action: lambda:InvokeFunction
+#                Resource: '*'
+Outputs:
+  AppSyncApiId:
+    Value: !GetAtt GraphQLAPI.ApiId
+  AppSyncApiUrl:
+    Value: !GetAtt GraphQLAPI.GraphQLUrl

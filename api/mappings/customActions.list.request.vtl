@@ -1,0 +1,10 @@
+#set( $limit = $util.defaultIfNull($context.args.limit, 100) )
+{
+  "version": "2017-02-28",
+  "operation": "Query",
+  "limit": $limit,
+  #if( $context.args.nextToken )
+    "nextToken": "$context.args.nextToken",
+  #end
+  "scan": { }
+}
