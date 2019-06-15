@@ -1,7 +1,5 @@
 import React from 'react';
 import { HashRouter as Router, Route, Switch} from 'react-router-dom';
-import gql from 'graphql-tag';
-import _ from 'lodash';
 
 
 
@@ -18,16 +16,17 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
-import Box from '@material-ui/core/Box';
 
 
 import AWSAppSyncClient from 'aws-appsync';
-import { ApolloProvider, graphql } from 'react-apollo';
+import { ApolloProvider } from 'react-apollo';
+import _ from 'lodash';
 
 import styles from './styles';
 import Footer from './Components/Footer';
 import Wellness from './Components/Wellness';
 import Action from './Components/Action';
+import Learning from './Components/Learning';
 
 import config from './awsconfig';
 const key_client = new AWSAppSyncClient(config.AppSync.KEY);
@@ -107,7 +106,7 @@ function ActionCompactMenu() {
                 <Grid container spacing={5} alignItems="flex-end">
                     {[['Wellness', '#activity/wellness'], ['Action', '#activity/action'], ['Learning', '#activity/learning'], ].map(tier => (
                         <Grid item key={tier[0]} xs={12} md={4}>
-                            <Button align="center" fullWidth color="tertiary" href={tier[1]}>{tier[0]}</Button>
+                            <Button align="center" fullWidth href={tier[1]}>{tier[0]}</Button>
                         </Grid>
                         ))}
                 </Grid>
@@ -181,6 +180,7 @@ function AppRouter() {
                         <Route exact path="/" component={CallToAction} />
                         <Route exact path="/activity/wellness" component={Wellness} />
                         <Route exact path="/activity/action" component={Action} />
+                        <Route exact path="/activity/learning" component={Learning} />
                     </Switch>
                     <Route path="/activity" component={ActionCompactMenu} />
                 </Router>

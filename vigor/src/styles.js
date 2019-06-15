@@ -24,6 +24,9 @@ const useStyles = makeStyles(theme => ({
     link: {
         margin: theme.spacing(1, 1.5),
     },
+    cardAction: {
+        marginTop: theme.spacing(3),
+    },
     heroContent: {
         padding: theme.spacing(8, 0, 6),
     },

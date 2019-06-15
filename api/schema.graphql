@@ -14,7 +14,7 @@ type ListActionsResponse {
 type Query {
     listCustomActions(nextToken: String): ListActionsResponse
     getBoredAction(category: String): Action
-    getActions(category: String): ListActionsResponse
+    getActions(nextToken: String, category: String): ListActionsResponse
 }
 
 # type Subscription { }
