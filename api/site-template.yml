@@ -1,7 +1,4 @@
 AWSTemplateFormatVersion: '2010-09-09'
-# aws --region us-east-2 create-stack --stack-name vpc-topographer-site --template-body file://site-template.yml
-# aws --region us-east-2 update-stack --stack-name vpc-topographer-site --template-body file://site-template.yml
-# aws s3 sync --delete build/ s3://vpc-topographer-site-topographerbucket-5xfufodd8hlz/
 Description: Vigor app
 Parameters:
   Stage:
@@ -16,7 +13,10 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      AccessControl: "Private"
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
       BucketEncryption:
         ServerSideEncryptionConfiguration:
         - ServerSideEncryptionByDefault:
@@ -42,6 +42,17 @@ Resources:
           Value: "Site for sls web site"
       DistributionConfig:
         Origins:
+        - DomainName:
+            "Fn::Join":
+              - "."
+              -
+                - !Ref StaticSiteBucket
+                - 'Fn::FindInMap': [RegionMap, {Ref: "AWS::Region"}, websiteendpoint]
+          Id: S3Static
+          CustomOriginConfig:
+            HTTPPort: 80
+            HTTPSPort: 443
+            OriginProtocolPolicy: http-only
         - DomainName: !GetAtt StaticSiteBucket.DomainName
           Id: s3Origin
           S3OriginConfig:
@@ -56,10 +67,10 @@ Resources:
           - GET
           - HEAD
           Compress: true
-          DefaultTTL: 30
+          DefaultTTL: 3
           MaxTTL: 3600
           MinTTL: 0
-          TargetOriginId: s3Origin
+          TargetOriginId: S3Static
           ForwardedValues:
             QueryString: 'false'
             Cookies:
@@ -160,3 +171,41 @@ Outputs:
     Value: !GetAtt GraphQLAPI.ApiId
   AppSyncApiUrl:
     Value: !GetAtt GraphQLAPI.GraphQLUrl
+Mappings:
+  RegionMap:
+    ap-northeast-1:
+      S3hostedzoneID: "Z2M4EHUR26P7ZW"
+      websiteendpoint: "s3-website-ap-northeast-1.amazonaws.com"
+    ap-northeast-2:
+      S3hostedzoneID: "Z3W03O7B5YMIYP"
+      websiteendpoint: "s3-website.ap-northeast-2.amazonaws.com"
+    ap-south-1:
+      S3hostedzoneID: "Z11RGJOFQNVJUP"
+      websiteendpoint: "s3-website.ap-south-1.amazonaws.com"
+    ap-southeast-1:
+      S3hostedzoneID: "Z3O0J2DXBE1FTB"
+      websiteendpoint: "s3-website-ap-southeast-1.amazonaws.com"
+    ap-southeast-2:
+      S3hostedzoneID: "Z1WCIGYICN2BYD"
+      websiteendpoint: "s3-website-ap-southeast-2.amazonaws.com"
+    eu-central-1:
+      S3hostedzoneID: "Z21DNDUVLTQW6Q"
+      websiteendpoint: "s3-website.eu-central-1.amazonaws.com"
+    eu-west-1:
+      S3hostedzoneID: "Z1BKCTXD74EZPE"
+      websiteendpoint: "s3-website-eu-west-1.amazonaws.com"
+    sa-east-1:
+      S3hostedzoneID: "Z7KQH4QJS55SO"
+      websiteendpoint: "s3-website-sa-east-1.amazonaws.com"
+    us-east-1:
+      S3hostedzoneID: "Z3AQBSTGFYJSTF"
+      websiteendpoint: "s3-website-us-east-1.amazonaws.com"
+    us-east-2:
+      S3hostedzoneID: "Z2O1EMRO9K5GLX"
+      websiteendpoint: "s3-website.us-east-2.amazonaws.com"
+    us-west-1:
+      S3hostedzoneID: "Z2F56UZL2M1ACD"
+      websiteendpoint: "s3-website-us-west-1.amazonaws.com"
+    us-west-2:
+      S3hostedzoneID: "Z3BJ6K6RIION7M"
+      websiteendpoint: "s3-website-us-west-2.amazonaws.com"
