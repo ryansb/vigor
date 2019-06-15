@@ -1,13 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
 Description: Vigor app
 Parameters:
   Stage:
     Type: String
     Default: dev
-Conditions:
-  notDev: !Or
-  - !Equals [ !Ref Stage, "prod" ]
-  - !Equals [ !Ref Stage, "staging" ]
+#Conditions:
+#  notDev: !Or
+#  - !Equals [ !Ref Stage, "prod" ]
+#  - !Equals [ !Ref Stage, "staging" ]
 Resources:
   StaticSiteBucket:
     Type: AWS::S3::Bucket
@@ -16,7 +17,7 @@ Resources:
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
-        ErrorDocument: error.html
+        ErrorDocument: index.html
       BucketEncryption:
         ServerSideEncryptionConfiguration:
         - ServerSideEncryptionByDefault:
@@ -31,6 +32,11 @@ Resources:
     Properties:
       Name: !Sub vigor-backend-${Stage}
       AuthenticationType: API_KEY
+      AdditionalAuthenticationProviders:
+      - AuthenticationType: AMAZON_COGNITO_USER_POOLS
+        UserPoolConfig:
+          AwsRegion: us-east-2
+          UserPoolId: us-east-2_NvvTEjnBZ
       LogConfig:
         CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingRole.Arn
         FieldLogLevel: ALL
@@ -53,6 +59,15 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: ExpiryEpoch
         Enabled: true
+  BoredActionDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLAPI.ApiId
+      Name: BoredAction
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncApiRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt BoredSingle.Arn
   CustomActionsDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -63,6 +78,16 @@ Resources:
       DynamoDBConfig:
         AwsRegion: !Ref 'AWS::Region'
         TableName: !Ref CustomActionTable
+  GetBoredActionResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: [GraphQLSchema]
+    Properties:
+      ApiId: !GetAtt GraphQLAPI.ApiId
+      DataSourceName: !GetAtt BoredActionDataSource.Name
+      FieldName: getBoredAction
+      TypeName: Query
+      RequestMappingTemplateS3Location: mappings/bored.get.request.vtl
+      ResponseMappingTemplateS3Location: mappings/passthrough.response.vtl
   ListCustomActionsResolver:
     Type: AWS::AppSync::Resolver
     Properties:
@@ -131,6 +156,22 @@ Resources:
               - Effect: Allow
                 Action: lambda:InvokeFunction
                 Resource: '*'
+  BoredSingle:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./functions
+      Handler: bored.handler
+      Runtime: python3.7
+
+
+
+
+
+
+
+
+
+
 Outputs:
   AppSyncApiId:
     Value: !GetAtt GraphQLAPI.ApiId
