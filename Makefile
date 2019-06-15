@@ -8,3 +8,5 @@ frontend:
 	rm -rf vigor/build || true
 	pushd vigor ; yarn run build
 	pushd vigor/build ; aws s3 --profile slscode sync --acl public-read --delete . s3://vigor-dev-staticsitebucket-1n5jgthz8o4rx
+
+deploy: backend frontend
