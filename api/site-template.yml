@@ -31,6 +31,9 @@ Resources:
     Properties:
       Name: !Sub vigor-backend-${Stage}
       AuthenticationType: API_KEY
+      LogConfig:
+        CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingRole.Arn
+        FieldLogLevel: ALL
   CustomActionTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -69,6 +72,29 @@ Resources:
       TypeName: Query
       RequestMappingTemplateS3Location: mappings/customActions.list.request.vtl
       ResponseMappingTemplateS3Location: mappings/passthrough.response.vtl
+  AppSyncLoggingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /vigor/
+      Policies:
+        - PolicyName: LogToCW
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:DescribeLogStreams
+                Resource: '*'
   AppSyncApiRole:
     Type: AWS::IAM::Role
     Properties:
@@ -88,28 +114,33 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:BatchGetItem
-                  #- dynamodb:BatchWriteItem
-                  #- dynamodb:PutItem
-                  #- dynamodb:UpdateItem
-                  #- dynamodb:DeleteItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
                   - dynamodb:GetItem
                   - dynamodb:Scan
                   - dynamodb:Query
                 Resource:
                   - !GetAtt CustomActionTable.Arn
                   - !Sub '${CustomActionTable.Arn}/*'
-#        - PolicyName: LambdaAccess
-#          PolicyDocument:
-#            Version: '2012-10-17'
-#            Statement:
-#              - Effect: Allow
-#                Action: lambda:InvokeFunction
-#                Resource: '*'
+        - PolicyName: LambdaAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: '*'
 Outputs:
   AppSyncApiId:
     Value: !GetAtt GraphQLAPI.ApiId
   AppSyncApiUrl:
     Value: !GetAtt GraphQLAPI.GraphQLUrl
+  BucketSite:
+    Value: !Join
+    - '.'
+    - - !Ref StaticSiteBucket
+      - !FindInMap [RegionMap, !Ref "AWS::Region", websiteendpoint]
 Mappings:
   RegionMap:
     ap-northeast-1:
