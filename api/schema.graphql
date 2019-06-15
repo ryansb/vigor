@@ -10,6 +10,7 @@ type ListActionsResponse {
 
 type Query {
     listCustomActions(nextToken: String): ListActionsResponse
+    getBoredAction(category: String): Action
 }
 
 # type Subscription { }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { HashRouter as Router, Route, Switch} from 'react-router-dom';
 import gql from 'graphql-tag';
 import _ from 'lodash';
 
@@ -26,15 +26,11 @@ import { ApolloProvider, graphql } from 'react-apollo';
 
 import styles from './styles';
 import Footer from './Components/Footer';
+import Wellness from './Components/Wellness';
 
-const client = new AWSAppSyncClient({
-    url: 'https://wnbljnl5mnbvbm2wmw425hldoe.appsync-api.us-east-2.amazonaws.com/graphql',
-    region: 'us-east-2',
-    auth: {
-        type: 'API_KEY',
-        apiKey: 'dmtest',
-    }
-});
+import config from './awsconfig';
+const key_client = new AWSAppSyncClient(config.AppSync.KEY);
+const pool_client = new AWSAppSyncClient(config.AppSync.USER_POOL);
 
 const tiers = [
     {
@@ -44,12 +40,13 @@ const tiers = [
             'Get out and exercise',
             'Find an event',
         ],
+        href: "#activity/wellness",
         buttonText: 'Help me relax',
-        buttonVariant: 'outlined',
+        buttonVariant: 'contained',
     },
     {
         title: 'Action',
-        subheader: 'Most popular',
+        href: "#activity/action",
         description: [
             'Find a cause',
             'Learn what you can do',
@@ -60,17 +57,17 @@ const tiers = [
     },
     {
         title: 'Learning',
+        href: "#activity/learning",
         description: [
             'Learn a new skill',
             'Dive into history',
             'Discover your community'
         ],
         buttonText: 'Get smarter every day',
-        buttonVariant: 'outlined',
+        buttonVariant: 'contained',
     },
 ];
-
-function CallToAction() {
+function MenuBar() {
     const classes = styles();
 
     return (
@@ -78,21 +75,51 @@ function CallToAction() {
             <AppBar position="static" color="default" elevation={0} className={classes.appBar}>
                 <Toolbar className={classes.toolbar}>
                     <Typography variant="h6" color="inherit" noWrap className={classes.toolbarTitle}>
-                        Vigor
+                        <Link href="#">Vigor</Link>
                     </Typography>
-                    <nav>
-                        <Link
-                            variant="button" color="textPrimary"
-                            href="http://twitter.com/intent/tweet?text=I'm+turning+boredom+into+action+on+Vigor+https://vigor-dev-staticsitebucket-1n5jgthz8o4rx.s3.us-east-2.amazonaws.com/index.html" className={classes.link}
+                        <Button
+                            variant="contained" color="primary"
+                            href="http://twitter.com/intent/tweet?text=I'm+turning+boredom+into+action+on+Vigor+https://vigor-dev-staticsitebucket-1n5jgthz8o4rx.s3.us-east-2.amazonaws.com/index.html"
+                            className={classes.link}
                         >
                             Tweet About It!
-                        </Link>
-                    </nav>
+                        </Button>
                     <Button href="#" color="primary" variant="outlined" className={classes.link}>
                         Login
                     </Button>
                 </Toolbar>
             </AppBar>
+        </React.Fragment>
+    )
+}
+
+function ActionCompactMenu() {
+    const classes = styles();
+
+    return (
+        <React.Fragment>
+            <Container maxWidth="md" component="main">
+                <br/>
+                <br/>
+                <br/>
+                <br/>
+                <Grid container spacing={5} alignItems="flex-end">
+                    {[['Wellness', '#activity/wellness'], ['Action', '#activity/action'], ['Learning', '#activity/learning'], ].map(tier => (
+                        <Grid item key={tier[0]} xs={12} md={4}>
+                            <Button align="center" fullWidth color="tertiary" href={tier[1]}>{tier[0]}</Button>
+                        </Grid>
+                        ))}
+                </Grid>
+            </Container>
+        </React.Fragment>
+    )
+}
+
+function CallToAction() {
+    const classes = styles();
+
+    return (
+        <React.Fragment>
             {/* Hero unit */}
             <Container maxWidth="sm" component="main" className={classes.heroContent}>
                 <Typography component="h1" variant="h2" align="center" color="textPrimary" gutterBottom>
@@ -128,7 +155,7 @@ function CallToAction() {
                                     </ul>
                                 </CardContent>
                                 <CardActions>
-                                    <Button fullWidth variant={tier.buttonVariant} color="primary">
+                                    <Button fullWidth href={tier.href} variant={tier.buttonVariant} color="primary">
                                         {tier.buttonText}
                                     </Button>
                                 </CardActions>
@@ -145,11 +172,18 @@ function CallToAction() {
 function AppRouter() {
     return (
         <React.Fragment>
-            <CssBaseline />
-            <Router>
-                <CallToAction />
-            </Router>
-            <Footer />
+            <ApolloProvider client={key_client}>
+                <CssBaseline />
+                <MenuBar />
+                <Router hashType="noslash">
+                    <Switch>
+                        <Route exact path="/" component={CallToAction} />
+                        <Route exact path="/activity/wellness" component={Wellness} />
+                    </Switch>
+                    <Route path="/activity" component={ActionCompactMenu} />
+                </Router>
+                <Footer />
+            </ApolloProvider>
         </React.Fragment>
     );
 }
