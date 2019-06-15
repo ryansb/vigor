@@ -178,9 +178,9 @@ function AppRouter() {
                 <Router hashType="noslash">
                     <Switch>
                         <Route exact path="/" component={CallToAction} />
-                        <Route exact path="/activity/wellness" component={Wellness} />
-                        <Route exact path="/activity/action" component={Action} />
-                        <Route exact path="/activity/learning" component={Learning} />
+                        <Route path="/activity/wellness" component={Wellness} />
+                        <Route path="/activity/action" component={Action} />
+                        <Route path="/activity/learning" component={Learning} />
                     </Switch>
                     <Route path="/activity" component={ActionCompactMenu} />
                 </Router>

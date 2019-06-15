@@ -18,17 +18,17 @@ const takeAction = gql`
 query Act ($cat: String, $nextToken: String) {
   getActions(category: $cat, nextToken: $nextToken) {
       items {
-      Id
-      Title
-      Link
-      Description
-      CallToAction
+          Id
+          Title
+          Link
+          Description
+          CallToAction
       }
       nextToken
   }
 }`;
 
-export default function BaseActionDisplay({category}) {
+export default function BaseActionDisplay({category, location}) {
     const classes = styles();
     return (
         <Container component="main" maxWidth="md">
@@ -38,7 +38,11 @@ export default function BaseActionDisplay({category}) {
                     if (error) return `Error! ${error.message}`;
                     return (
                         <React.Fragment>
-                            {_.map(data.getActions.items, (action => (
+                            {_.first(_.map(_.shuffle(
+                                _.filter(
+                                    data.getActions.items,
+                                    action => window.localStorage.getItem(action.Id) < (Date.now() / 1000) - 30
+                                )), (action => (
                                 <Card className={classes.cardAction} key={action.Id}>
                                     <CardHeader
                                         title={action.Title}
@@ -57,12 +61,15 @@ export default function BaseActionDisplay({category}) {
                                         <Button fullWidth href={action.Link} variant='contained' color="primary">
                                             {action.CallToAction}
                                         </Button>
-                                        <Button fullWidth href={action.Link} variant='outlined' color="secondary">
+                                        <Button fullWidth variant='outlined' color="secondary"
+                                                href={location + '/' + action.Id}
+                                                onClick={f => {window.localStorage.setItem(action.Id, (Date.now() / 1000))}}
+                                        >
                                             Not today
                                         </Button>
                                     </CardActions>
                                 </Card>
-                            )))}
+                            ))))}
                         </React.Fragment>
                     );
                 }}
