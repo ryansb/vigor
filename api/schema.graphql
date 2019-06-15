@@ -1,6 +1,9 @@
 type Action {
   Id: String!
   Title: String!
+  Link: String
+  Description: String
+  CallToAction: String
 }
 
 type ListActionsResponse {
@@ -11,6 +14,7 @@ type ListActionsResponse {
 type Query {
     listCustomActions(nextToken: String): ListActionsResponse
     getBoredAction(category: String): Action
+    getActions(category: String): ListActionsResponse
 }
 
 # type Subscription { }

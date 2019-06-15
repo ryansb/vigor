@@ -46,19 +46,26 @@ Resources:
       AttributeDefinitions:
       - AttributeName: Id
         AttributeType: S
-      - AttributeName: Type
+      - AttributeName: Category
         AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-      - AttributeName: Type
-        KeyType: HASH
       - AttributeName: Id
-        KeyType: RANGE
+        KeyType: HASH
       SSESpecification:
         SSEEnabled: true
       TimeToLiveSpecification:
         AttributeName: ExpiryEpoch
         Enabled: true
+      GlobalSecondaryIndexes:
+      - IndexName: ByCategory
+        KeySchema:
+        - AttributeName: Category
+          KeyType: HASH
+        - AttributeName: Id
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
   BoredActionDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -88,8 +95,19 @@ Resources:
       TypeName: Query
       RequestMappingTemplateS3Location: mappings/bored.get.request.vtl
       ResponseMappingTemplateS3Location: mappings/passthrough.response.vtl
+  GetActionResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: [GraphQLSchema]
+    Properties:
+      ApiId: !GetAtt GraphQLAPI.ApiId
+      DataSourceName: !GetAtt CustomActionsDataSource.Name
+      FieldName: getAction
+      TypeName: Query
+      RequestMappingTemplateS3Location: mappings/action.get.request.vtl
+      ResponseMappingTemplateS3Location: mappings/passthrough.response.vtl
   ListCustomActionsResolver:
     Type: AWS::AppSync::Resolver
+    DependsOn: [GraphQLSchema]
     Properties:
       ApiId: !GetAtt GraphQLAPI.ApiId
       DataSourceName: !GetAtt CustomActionsDataSource.Name

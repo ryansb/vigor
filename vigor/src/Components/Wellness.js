@@ -44,9 +44,9 @@ export default function Wellness() {
                             />
                             <CardContent>
                                 <ul>
-                                        <Typography component="li" variant="subtitle1" align="center">
-                                            {data.getBoredAction.Title}
-                                        </Typography>
+                                    <Typography component="li" variant="subtitle1" align="center">
+                                        {data.getBoredAction.Title}
+                                    </Typography>
                                 </ul>
                             </CardContent>
                             <CardActions>

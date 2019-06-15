@@ -27,6 +27,7 @@ import { ApolloProvider, graphql } from 'react-apollo';
 import styles from './styles';
 import Footer from './Components/Footer';
 import Wellness from './Components/Wellness';
+import Action from './Components/Action';
 
 import config from './awsconfig';
 const key_client = new AWSAppSyncClient(config.AppSync.KEY);
@@ -179,6 +180,7 @@ function AppRouter() {
                     <Switch>
                         <Route exact path="/" component={CallToAction} />
                         <Route exact path="/activity/wellness" component={Wellness} />
+                        <Route exact path="/activity/action" component={Action} />
                     </Switch>
                     <Route path="/activity" component={ActionCompactMenu} />
                 </Router>
