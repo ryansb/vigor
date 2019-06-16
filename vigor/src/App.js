@@ -1,8 +1,6 @@
 import React from 'react';
 import { HashRouter as Router, Route, Switch} from 'react-router-dom';
 
-
-
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
@@ -11,7 +9,6 @@ import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
-import StarIcon from '@material-ui/icons/StarBorder';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Link from '@material-ui/core/Link';
@@ -29,7 +26,9 @@ import Action from './Components/Action';
 import Learning from './Components/Learning';
 import Auth from './Components/Auth';
 
+
 import config from './awsconfig';
+import ScoreView from "./Components/ScoreView";
 const key_client = new AWSAppSyncClient(config.AppSync.KEY);
 const pool_client = new AWSAppSyncClient(config.AppSync.USER_POOL);
 
@@ -46,7 +45,7 @@ const tiers = [
         buttonVariant: 'contained',
     },
     {
-        title: 'Action',
+        title: <span style={{fontWeight: 900}}>Action</span>,
         href: "#activity/action",
         description: [
             'Find a cause',
@@ -78,16 +77,25 @@ function MenuBar() {
                     <Typography variant="h6" color="inherit" noWrap className={classes.toolbarTitle}>
                         <Link href="#">Vigor</Link>
                     </Typography>
-                        <Button
-                            variant="outlined" color="primary"
-                            href="http://twitter.com/intent/tweet?text=I'm+turning+boredom+into+action+on+Vigor+https://vigor-dev-staticsitebucket-1n5jgthz8o4rx.s3.us-east-2.amazonaws.com/index.html"
-                            className={classes.link}
-                        >
-                            Tweet About It!
-                        </Button>
-                    <Button href="#login" style={{ color: 'green'}} variant="contained" className={classes.link}>
-                        Login
+                    <Button
+                        variant="outlined" color="primary"
+                        href="http://twitter.com/intent/tweet?text=I'm+turning+boredom+into+action+on+Vigor+https://vigor-dev-staticsitebucket-1n5jgthz8o4rx.s3.us-east-2.amazonaws.com/index.html"
+                        className={classes.link}
+                    >
+                        Tweet About It!
                     </Button>
+                    {
+                        window.localStorage.getItem('amplify-authenticator-authState') === 'signedIn' ?
+                            (
+                                <Button href="#" style={{ color: 'green'}} variant="contained" className={classes.link}>
+                                    <ScoreView/> Points
+                                </Button>
+                            ) : (
+                                <Button href="#login" style={{ color: 'green'}} variant="contained" className={classes.link}>
+                                    Login
+                                </Button>
+                            )
+                    }
                 </Toolbar>
             </AppBar>
         </React.Fragment>
@@ -123,13 +131,14 @@ function CallToAction() {
         <React.Fragment>
             {/* Hero unit */}
             <div style={{
-                "margin-bottom": "3em",
-                "padding-top": "8em",
-                "padding-bottom": "5em",
-                "background-image": "radial-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8)), url('/back_1.jpg')"
+                "marginBottom": "3em",
+                "paddingTop": "4em",
+                "paddingBottom": "5em",
+                backgroundSize: "cover",
+                "backgroundImage": "radial-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8)), url('/back_2.jpg')"
             }} >
             <Container maxWidth="sm" component="main" className={classes.heroContent}>
-                <Typography component="h1" variant="h2" align="center" style={{"color": "lightgrey", "margin-bottom": "3.5em"}} gutterBottom>
+                <Typography component="h1" variant="h2" align="center" style={{"color": "lightgrey", "marginBottom": "1em"}} gutterBottom>
                     Turn Boredom Into Action
                 </Typography>
                 <Typography variant="h5" align="center" style={{"color": "lightgrey"}} component="p">
@@ -139,7 +148,7 @@ function CallToAction() {
             </Container>
             </div>
             {/* End hero unit */}
-            <Container maxWidth="md" component="main">
+            <Container maxWidth="md" style={{ paddingTop: "6em"}} component="main">
                 <Grid container spacing={5} alignItems="flex-end">
                     {tiers.map(tier => (
                         // Enterprise card is full width at sm breakpoint
@@ -150,7 +159,6 @@ function CallToAction() {
                                     subheader={tier.subheader}
                                     titleTypographyProps={{ align: 'center' }}
                                     subheaderTypographyProps={{ align: 'center' }}
-                                    action={tier.title === 'Action' ? <StarIcon /> : null}
                                     className={classes.cardHeader}
                                 />
                                 <CardContent>
@@ -163,7 +171,13 @@ function CallToAction() {
                                     </ul>
                                 </CardContent>
                                 <CardActions>
-                                    <Button fullWidth href={tier.href} variant={tier.buttonVariant} color="primary">
+                                    <Button fullWidth href={tier.href} variant={tier.buttonVariant}
+                                            style={{
+                                                color: '#FAFAFA',
+                                                fontSize: '1.2em',
+                                                backgroundColor: '#80AD53'
+                                            }}
+                                    >
                                         {tier.buttonText}
                                     </Button>
                                 </CardActions>
@@ -191,12 +205,12 @@ function AppRouter() {
                         <Route path="/activity/action" component={Action} />
                         <Route path="/activity/learning" component={Learning} />
                     </Switch>
-                    <Route path="/activity" component={ActionCompactMenu} />
                 </Router>
                 <Footer />
             </ApolloProvider>
         </React.Fragment>
     );
 }
+/*<Route path="/activity" component={ActionCompactMenu} />*/
 
 export default AppRouter;

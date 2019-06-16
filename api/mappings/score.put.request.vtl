@@ -1,0 +1,13 @@
+{
+    "version" : "2017-02-28",
+    "operation" : "UpdateItem",
+    "key": {
+        "Id" : {"S": "${context.arguments.user}"}
+    },
+    "update" : {
+        "expression" : "ADD score :q",
+        "expressionValues" : {
+          ":q" : {"N": "1"}
+        }
+    }
+}

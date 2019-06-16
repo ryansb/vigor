@@ -4,8 +4,6 @@ import { Authenticator, withAuthenticator } from 'aws-amplify-react';
 
 Amplify.configure({
     Auth: {
-
-
         region: 'us-east-2',
         // OPTIONAL - Amazon Cognito User Pool ID
         userPoolId: 'us-east-2_c3KUuV1II',

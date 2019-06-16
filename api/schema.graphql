@@ -11,12 +11,22 @@ type ListActionsResponse {
   nextToken: String
 }
 
+type Score {
+  Id: String
+  score: Int
+}
+
 type Query {
     listCustomActions(nextToken: String): ListActionsResponse
     getBoredAction(category: String): Action
+    getScore(user: String): Score
     getActions(nextToken: String, category: String): ListActionsResponse
 }
 
 # type Subscription { }
-
-# type Mutation { }
+type ScoreResponse {
+  score: String
+}
+type Mutation {
+    putScore(user: String): ScoreResponse
+}

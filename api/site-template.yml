@@ -40,6 +40,18 @@ Resources:
       LogConfig:
         CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingRole.Arn
         FieldLogLevel: ALL
+  ScoringTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: Id
+        AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+      - AttributeName: Id
+        KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
   CustomActionTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -75,6 +87,16 @@ Resources:
       ServiceRoleArn: !GetAtt AppSyncApiRole.Arn
       LambdaConfig:
         LambdaFunctionArn: !GetAtt BoredSingle.Arn
+  ScoreDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLAPI.ApiId
+      Name: Score
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncApiRole.Arn
+      DynamoDBConfig:
+        AwsRegion: !Ref 'AWS::Region'
+        TableName: !Ref ScoringTable
   CustomActionsDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
@@ -104,6 +126,26 @@ Resources:
       FieldName: getActions
       TypeName: Query
       RequestMappingTemplateS3Location: mappings/action.get.request.vtl
+      ResponseMappingTemplateS3Location: mappings/passthrough.response.vtl
+  GetScoreResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: [GraphQLSchema]
+    Properties:
+      ApiId: !GetAtt GraphQLAPI.ApiId
+      DataSourceName: !GetAtt ScoreDataSource.Name
+      FieldName: getScore
+      TypeName: Query
+      RequestMappingTemplateS3Location: mappings/score.get.request.vtl
+      ResponseMappingTemplateS3Location: mappings/passthrough.response.vtl
+  PutScoreResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: [GraphQLSchema]
+    Properties:
+      ApiId: !GetAtt GraphQLAPI.ApiId
+      DataSourceName: !GetAtt ScoreDataSource.Name
+      FieldName: putScore
+      TypeName: Mutation
+      RequestMappingTemplateS3Location: mappings/score.put.request.vtl
       ResponseMappingTemplateS3Location: mappings/passthrough.response.vtl
   ListCustomActionsResolver:
     Type: AWS::AppSync::Resolver
@@ -167,6 +209,8 @@ Resources:
                 Resource:
                   - !GetAtt CustomActionTable.Arn
                   - !Sub '${CustomActionTable.Arn}/*'
+                  - !GetAtt ScoringTable.Arn
+                  - !Sub '${ScoringTable.Arn}/*'
         - PolicyName: LambdaAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -180,6 +224,28 @@ Resources:
       CodeUri: ./functions
       Handler: bored.handler
       Runtime: python3.7
+      Timeout: 10
+      Events:
+        TriggerScrape:
+          Type: Schedule
+          Properties:
+            Schedule: rate(5 minutes)
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+                - dynamodb:Scan
+                - dynamodb:Query
+              Resource:
+                - !GetAtt CustomActionTable.Arn
+                - !Sub '${CustomActionTable.Arn}/*'
   CitizenScienceScraper:
     Type: AWS::Serverless::Function
     Properties:

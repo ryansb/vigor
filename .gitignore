@@ -1,3 +1,4 @@
 vigor/build
 vigor/node_modules
 packaged.template.yml
+api/.aws-sam/

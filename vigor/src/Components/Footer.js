@@ -11,7 +11,6 @@ const footers = [
         title: 'Sources',
         description: [
             {text: 'Bored API', url: 'https://boredapi.com'},
-            {text: 'Step Out Buffalo', url: 'https://stepoutbuffalo.com/'},
             {text: 'The North Star', url: 'https://thenorthstar.com/'},
             {text: 'Citizen Science', url: 'https://www.citizenscience.gov/catalog/#'},
         ],
@@ -29,7 +28,7 @@ const footers = [
 export default function Footer() {
     const classes = styles();
     return (<React.Fragment>
-        <Container maxWidth="md" component="footer" className={classes.footer}>
+        <Container maxWidth="md" style={{ marginTop: '25em' }} component="footer" className={classes.footer}>
             <Grid container spacing={4} justify="space-evenly">
                 {footers.map(footer => (
                     <Grid item xs={6} sm={3} key={footer.title}>
