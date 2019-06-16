@@ -27,6 +27,7 @@ import Footer from './Components/Footer';
 import Wellness from './Components/Wellness';
 import Action from './Components/Action';
 import Learning from './Components/Learning';
+import Auth from './Components/Auth';
 
 import config from './awsconfig';
 const key_client = new AWSAppSyncClient(config.AppSync.KEY);
@@ -78,13 +79,13 @@ function MenuBar() {
                         <Link href="#">Vigor</Link>
                     </Typography>
                         <Button
-                            variant="contained" color="primary"
+                            variant="outlined" color="primary"
                             href="http://twitter.com/intent/tweet?text=I'm+turning+boredom+into+action+on+Vigor+https://vigor-dev-staticsitebucket-1n5jgthz8o4rx.s3.us-east-2.amazonaws.com/index.html"
                             className={classes.link}
                         >
                             Tweet About It!
                         </Button>
-                    <Button href="#" color="primary" variant="outlined" className={classes.link}>
+                    <Button href="#login" style={{ color: 'green'}} variant="contained" className={classes.link}>
                         Login
                     </Button>
                 </Toolbar>
@@ -121,15 +122,22 @@ function CallToAction() {
     return (
         <React.Fragment>
             {/* Hero unit */}
+            <div style={{
+                "margin-bottom": "3em",
+                "padding-top": "8em",
+                "padding-bottom": "5em",
+                "background-image": "radial-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8)), url('/back_1.jpg')"
+            }} >
             <Container maxWidth="sm" component="main" className={classes.heroContent}>
-                <Typography component="h1" variant="h2" align="center" color="textPrimary" gutterBottom>
+                <Typography component="h1" variant="h2" align="center" style={{"color": "lightgrey", "margin-bottom": "3.5em"}} gutterBottom>
                     Turn Boredom Into Action
                 </Typography>
-                <Typography variant="h5" align="center" color="textSecondary" component="p">
+                <Typography variant="h5" align="center" style={{"color": "lightgrey"}} component="p">
                     It's hard to choose where to spend your energy outside of work, school, or home life.
                     Is it time to zone out and watch TV? Are you taking time to improve yourself?
                 </Typography>
             </Container>
+            </div>
             {/* End hero unit */}
             <Container maxWidth="md" component="main">
                 <Grid container spacing={5} alignItems="flex-end">
@@ -142,7 +150,7 @@ function CallToAction() {
                                     subheader={tier.subheader}
                                     titleTypographyProps={{ align: 'center' }}
                                     subheaderTypographyProps={{ align: 'center' }}
-                                    action={tier.title === 'Pro' ? <StarIcon /> : null}
+                                    action={tier.title === 'Action' ? <StarIcon /> : null}
                                     className={classes.cardHeader}
                                 />
                                 <CardContent>
@@ -178,6 +186,7 @@ function AppRouter() {
                 <Router hashType="noslash">
                     <Switch>
                         <Route exact path="/" component={CallToAction} />
+                        <Route path="/login" component={Auth} />
                         <Route path="/activity/wellness" component={Wellness} />
                         <Route path="/activity/action" component={Action} />
                         <Route path="/activity/learning" component={Learning} />

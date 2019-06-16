@@ -10,4 +10,5 @@ def handler(event, context):
         'Tags': [a_type]
     }
 
-print(handler(None, None))
+if __name__ == '__main__':
+    print(handler(None, None))

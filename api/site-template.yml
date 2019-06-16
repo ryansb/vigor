@@ -36,7 +36,7 @@ Resources:
       - AuthenticationType: AMAZON_COGNITO_USER_POOLS
         UserPoolConfig:
           AwsRegion: us-east-2
-          UserPoolId: us-east-2_NvvTEjnBZ
+          UserPoolId: us-east-2_c3KUuV1II
       LogConfig:
         CloudWatchLogsRoleArn: !GetAtt AppSyncLoggingRole.Arn
         FieldLogLevel: ALL
@@ -180,6 +180,36 @@ Resources:
       CodeUri: ./functions
       Handler: bored.handler
       Runtime: python3.7
+  CitizenScienceScraper:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./functions
+      Handler: citizen_scraper.handler
+      Runtime: python3.7
+      MemorySize: 1024
+      Timeout: 25
+      Events:
+        TriggerScrape:
+          Type: Schedule
+          Properties:
+            Schedule: rate(5 minutes)
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+                - dynamodb:Scan
+                - dynamodb:Query
+              Resource:
+                - !GetAtt CustomActionTable.Arn
+                - !Sub '${CustomActionTable.Arn}/*'
+
 
 
 
