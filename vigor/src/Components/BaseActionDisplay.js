@@ -66,18 +66,26 @@ export default function BaseActionDisplay({category, location}) {
                                     <Grid item xs={3}>
                                     </Grid>
                                     <Grid item xs={6}>
-                                        <Mutation mutation={addPoint} >
-                                            {
-                                                pointScore => (
-                                        <Button style={{fontSize: "1.2em"}} fullWidth target='_blank' href={action.Link}
-                                                variant='contained' color="primary"
-                                                onClick={f => {pointScore({ variables:{user: uname}} )}}
-                                        >
-                                            {action.CallToAction}
-                                        </Button>
-                                                )
-                                            }
-                                        </Mutation>
+                                        {window.localStorage.getItem('amplify-authenticator-authState') === 'signedIn' ? (
+                                            <Mutation mutation={addPoint} >
+                                                {
+                                                    pointScore => (
+                                                        <Button style={{fontSize: "1.2em"}} fullWidth target='_blank' href={action.Link}
+                                                                variant='contained' color="primary"
+                                                                onClick={f => {pointScore({ variables:{user: uname}} )}}
+                                                        >
+                                                            {action.CallToAction}
+                                                        </Button>
+                                                    )
+                                                }
+                                            </Mutation>
+                                        ) : (
+                                            <Button style={{fontSize: "1.2em"}} fullWidth target='_blank' href={action.Link}
+                                                    variant='contained' color="primary"
+                                            >
+                                                {action.CallToAction}
+                                            </Button>
+                                        )}
                                     </Grid>
                                     <Grid item xs={3}>
                                     </Grid>

@@ -17,7 +17,6 @@ import Container from '@material-ui/core/Container';
 
 import AWSAppSyncClient from 'aws-appsync';
 import { ApolloProvider } from 'react-apollo';
-import _ from 'lodash';
 
 import styles from './styles';
 import Footer from './Components/Footer';
